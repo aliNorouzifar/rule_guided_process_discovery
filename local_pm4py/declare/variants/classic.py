@@ -56,6 +56,9 @@ def __rule_end_column(act: str) -> Tuple[str, str]:
 def __rule_responded_existence_column(act: str, act2: str) -> Tuple[str, str, str]:
     return (RESPONDED_EXISTENCE, act, act2)
 
+def __rule_nonresponded_existence_column(act: str, act2: str) -> Tuple[str, str, str]:
+    return (NONRESPONDED_EXISTENCE, act, act2)
+
 
 def __rule_response(act: str, act2: str) -> Tuple[str, str, str]:
     return (RESPONSE, act, act2)
@@ -161,20 +164,22 @@ def init_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]]
                         allowed_templates: Collection[str]):
     if INIT in allowed_templates:
         for act in activities:
-            if act == trace[0]:
-                rules[__rule_init_column(act)] = 1
-            else:
-                rules[__rule_init_column(act)] = -1
+            if len(trace)>1:
+                if act == trace[0]:
+                    rules[__rule_init_column(act)] = 1
+                else:
+                    rules[__rule_init_column(act)] = -1
 
 def end_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
                         activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
                         allowed_templates: Collection[str]):
     if END in allowed_templates:
         for act in activities:
-            if act == trace[-1]:
-                rules[__rule_end_column(act)] = 1
-            else:
-                rules[__rule_end_column(act)] = -1
+            if len(trace) > 1:
+                if act == trace[-1]:
+                    rules[__rule_end_column(act)] = 1
+                else:
+                    rules[__rule_end_column(act)] = -1
 
 
 def responded_existence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
@@ -189,6 +194,17 @@ def responded_existence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[
                     else:
                         rules[__rule_responded_existence_column(act, act2)] = 1
 
+def nonresponded_existence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int],
+                                       trace: Collection[str], activities: Set[str], act_counter: TCounter[str],
+                                       act_idxs: Dict[str, List[int]], allowed_templates: Collection[str]):
+    if NONRESPONDED_EXISTENCE in allowed_templates:
+        for act in act_counter:
+            for act2 in activities:
+                if act2 != act:
+                    if act2 not in act_counter:
+                        rules[__rule_nonresponded_existence_column(act, act2)] = 1
+                    else:
+                        rules[__rule_nonresponded_existence_column(act, act2)] = -1
 
 def response_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
                             activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
@@ -329,6 +345,22 @@ def chainprecedence_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str,
                         rules[__rule_chain_precedence(act2, act)] = 1 if is_ok_chain_prec else -1
 
 
+# def nonsuccession_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
+#                                  activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
+#                                  allowed_templates: Collection[str]):
+#     if NONSUCCESSION in allowed_templates:
+#         for act in act_counter:
+#             for act2 in activities:
+#                 if act2 != act:
+#                     if act2 not in act_counter:
+#                         rules[__rule_non_succession(act, act2)] = 1
+#                     else:
+#                         if act_idxs[act2][-1] < act_idxs[act][0]:
+#                             rules[__rule_non_succession(act, act2)] = 1
+#                         else:
+#                             rules[__rule_non_succession(act, act2)] = -1
+
+
 def nonsuccession_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int], trace: Collection[str],
                                  activities: Set[str], act_counter: TCounter[str], act_idxs: Dict[str, List[int]],
                                  allowed_templates: Collection[str]):
@@ -336,9 +368,10 @@ def nonsuccession_template_step1(rules: Dict[Union[Tuple[str, str], Tuple[str, s
         for act in act_counter:
             for act2 in activities:
                 if act2 != act:
-                    if act2 not in act_counter:
-                        rules[__rule_non_succession(act, act2)] = 1
-                    else:
+                    # if act2 not in act_counter:
+                    #     rules[__rule_non_succession(act, act2)] = 1
+                    # else:
+                    if act2  in act_counter:
                         if act_idxs[act2][-1] < act_idxs[act][0]:
                             rules[__rule_non_succession(act, act2)] = 1
                         else:
@@ -377,6 +410,16 @@ def responded_existence_template_step2(dataframe: pd.DataFrame, columns: Collect
                 if act2 != act:
                     if __rule_responded_existence_column(act, act2) not in columns:
                         dataframe[__rule_responded_existence_column(act, act2)] = [0] * len(dataframe)
+    return dataframe
+
+def nonresponded_existence_template_step2(dataframe: pd.DataFrame, columns: Collection[str], activities: Set[str],
+                                       allowed_templates: Collection[str]) -> pd.DataFrame:
+    if NONRESPONDED_EXISTENCE in allowed_templates:
+        for act in activities:
+            for act2 in activities:
+                if act2 != act:
+                    if __rule_nonresponded_existence_column(act, act2) not in columns:
+                        dataframe[__rule_nonresponded_existence_column(act, act2)] = [0] * len(dataframe)
     return dataframe
 
 
@@ -544,7 +587,7 @@ def form_rules_dataframe(log: Union[EventLog, pd.DataFrame],
     allowed_templates = exec_utils.get_param_value(Parameters.ALLOWED_TEMPLATES, parameters, None)
 
     if allowed_templates is None:
-        allowed_templates = {EXISTENCE, EXACTLY_ONE, INIT, RESPONDED_EXISTENCE, RESPONSE, PRECEDENCE, SUCCESSION,
+        allowed_templates = {EXISTENCE, EXACTLY_ONE, INIT, RESPONDED_EXISTENCE,NONRESPONDED_EXISTENCE, RESPONSE, PRECEDENCE, SUCCESSION,
                              ALTRESPONSE, ALTPRECEDENCE, ALTSUCCESSION, CHAINRESPONSE, CHAINPRECEDENCE, CHAINSUCCESSION,
                              ABSENCE, COEXISTENCE}
 
@@ -577,6 +620,7 @@ def form_rules_dataframe(log: Union[EventLog, pd.DataFrame],
         init_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
         end_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
         responded_existence_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
+        nonresponded_existence_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
         response_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
         precedence_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
         altresponse_template_step1(rules, trace, activities, act_counter, act_idxs, allowed_templates)
@@ -596,6 +640,7 @@ def form_rules_dataframe(log: Union[EventLog, pd.DataFrame],
     dataframe = exactly_one_template_step2(dataframe, columns, activities, allowed_templates)
     dataframe = atleast_one_template_step2(dataframe, columns, activities, allowed_templates)
     dataframe = responded_existence_template_step2(dataframe, columns, activities, allowed_templates)
+    dataframe = nonresponded_existence_template_step2(dataframe, columns, activities, allowed_templates)
     dataframe = response_template_step2(dataframe, columns, activities, allowed_templates)
     dataframe = precedence_template_step2(dataframe, columns, activities, allowed_templates)
     dataframe = altresponse_template_step2(dataframe, columns, activities, allowed_templates)
@@ -626,79 +671,35 @@ def get_rules_from_rules_df(rules_df: pd.DataFrame, parameters: Optional[Dict[An
     min_confidence_ratio = exec_utils.get_param_value(Parameters.MIN_CONFIDENCE_RATIO, parameters, None)
     rules = {}
 
-    if min_support_ratio is None and min_confidence_ratio is None:
-        # auto determine the minimum support and confidence ratio by identifying the values for the best feature
-        auto_selection_multiplier = exec_utils.get_param_value(Parameters.AUTO_SELECTION_MULTIPLIER, parameters, 0.8)
-        cols_prod = []
-        for col_name in rules_df:
-            col = rules_df[col_name]
-            supp = len(col[col != 0])
-            supp_ratio = float(supp) / float(len(rules_df))
-            if supp_ratio > 0:
-                conf_ratio = float(len(col[col == 1])) / float(supp)
-                prod = supp_ratio * conf_ratio
-                cols_prod.append((col_name, prod))
-        cols_prod = sorted(cols_prod, key=lambda x: (x[1], x[0]), reverse=True)
-        col = rules_df[cols_prod[0][0]]
-        supp = len(col[col != 0])
-        min_support_ratio = float(supp) / float(len(rules_df)) * auto_selection_multiplier
-        min_confidence_ratio = float(len(col[col == 1])) / float(supp) * auto_selection_multiplier
+    if min_support_ratio is None:
+        min_support_ratio = 0.2
+    if min_confidence_ratio is None:
+        min_confidence_ratio = 0.8
 
-    freq = {}
-    for ex in [r for r in rules_df if r[0]=='existence']:
-        col = rules_df[ex]
-        freq[ex[1]] = len(col[col == 1])
+
+
+    # freq = {}
+    # for ex in [r for r in rules_df if r[0]=='existence']:
+    #     col = rules_df[ex]
+    #     freq[ex[1]] = len(col[col == 1])
 
     for col_name in rules_df:
         col = rules_df[col_name]
-        if len(col_name)==2 and freq[col_name[1]]<(len(rules_df) * min_support_ratio):
-            continue
-        elif len(col_name)==3 and (freq[col_name[1]]<(len(rules_df) * min_support_ratio) or freq[col_name[2]]<(len(rules_df) * min_support_ratio)):
-            continue
 
-        supp = len(col[col != 0])
-        conf = len(col[col == 1])
+        satisfied = len(col[col == 1])
 
-        if conf >= supp * min_confidence_ratio:
-            rule, key = __col_to_dict_rule(col_name)
-            if rule not in rules:
-                rules[rule] = {}
-            if type(key)==str:
-                rules[rule][key] = {"act_sup":freq[key], "support": supp, "confidence": conf}
-            else:
-                rules[rule][key] = {"act_sup":(freq[key[0]],freq[key[1]]), "support": supp, "confidence": conf}
-
-
-    # for col_name in rules_df:
-    #     col = rules_df[col_name]
-    #     supp = len(col[col != 0])
-    #
-    #     if supp > len(rules_df) * min_support_ratio:
-    #         conf = len(col[col == 1])
-    #
-    #         if col_name[0] in {'noncoexistence','nonsuccession'}:
-    #             sup0 = 0
-    #             sup1 = 0
-    #             for col_name2 in rules_df:
-    #                 if col_name2[0]=='existence' and col_name2[1] == col_name[1]:
-    #                     col0 = rules_df[col_name2]
-    #                     sup0 = len(col0[col0 == 1])
-    #                 if col_name2[0]=='existence' and col_name2[1] == col_name[2]:
-    #                     col1 = rules_df[col_name2]
-    #                     sup1 = len(col1[col1 == 1])
-    #                 if conf >= supp * min_confidence_ratio and sup0> min_support_ratio*len(rules_df) and sup1> min_support_ratio*len(rules_df):
-    #                     rule, key = __col_to_dict_rule(col_name)
-    #                     if rule not in rules:
-    #                         rules[rule] = {}
-    #
-    #                     rules[rule][key] = {"support": supp, "confidence": conf}
-    #
-    #         elif conf >= supp * min_confidence_ratio:
-    #             rule, key = __col_to_dict_rule(col_name)
-    #             if rule not in rules:
-    #                 rules[rule] = {}
-    #
-    #             rules[rule][key] = {"support": supp, "confidence": conf}
+        support = satisfied/len(rules_df)
+        if support >= min_support_ratio:
+            activated = len(col[col != 0])
+            confidence = satisfied / activated
+            if confidence >= min_confidence_ratio:
+                rule, key = __col_to_dict_rule(col_name)
+                if rule not in rules:
+                    rules[rule] = {}
+                if type(key) == str:
+                    rules[rule][key] = {"activated": activated, "satisfied": satisfied, "support": support, "confidence": confidence}
+                else:
+                    rules[rule][key] = {"activated": activated, "satisfied": satisfied,"support": support, "confidence": confidence}
 
     return rules
 

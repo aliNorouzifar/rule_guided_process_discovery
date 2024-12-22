@@ -1,139 +1,59 @@
+import local_pm4py.functions.declare_processing as declare_processing
 
 
-EXISTENCE = "existence"
-EXACTLY_ONE = "exactly_one"
-INIT = "init"
-END = "end"
-RESPONDED_EXISTENCE = "responded_existence"
-RESPONSE = "response"
-PRECEDENCE = "precedence"
-COEXISTENCE = "coexistence"
-NONCOEXISTENCE = "noncoexistence"
-NONSUCCESSION = "nonsuccession"
-ATMOST_ONE = "atmost1"
+def is_allowed(SS1,SS2,rules,low_pen,to_be_checked):
+    dfa_intersect = rules[0]
 
-def is_allowed(S1,S2,rules,st_net,en_net):
+    da_list = rules[1]
+    S_mapped = rules[2]
     exclude = []
-    block = False
+    S1 = {rules[2][x] for x in SS1}
+    S2 = {rules[2][x] for x in SS2}
+    penalty = {'seq': 0, 'exc': 0, 'par': 0, 'loop': 0, 'loop_tau': 0, 'exc_tau':0}
+    for cut_type in to_be_checked:
+        # if (declare_processing.check_all(S1, S2, dfa_intersect, cut_type, S_mapped)):
+        # if (
+        # declare_processing.check_all(S1, S2, S1 , S2 , dfa_intersect, cut_type,
+        #                              S_mapped)):
+        #     # print(dfa[0])
+        #     exclude.append(cut_type)
+        #     penalty[cut_type] += +1
+        #
+        for dfa in da_list:
+            if (declare_processing.check_all(S1,S2,S1&{x for x in dfa[0][1]}, S2&{x for x in dfa[0][1]}, dfa[1], cut_type, S_mapped)):
 
-    for r in rules[ATMOST_ONE]:
-        if r in S1:
-            exclude.append('loop')
-            exclude.append('loop_tau')
-        elif r in S2:
-            exclude.append('loop')
-            exclude.append('loop_tau')
+                # print(dfa[0])
+                exclude.append(cut_type)
+                if penalty[cut_type]+dfa[2]>low_pen:
+                    penalty[cut_type] += dfa[2]
+                    break
+                else:
+                    penalty[cut_type] += dfa[2]
+                    low_pen = min(low_pen,penalty[cut_type])
+        if penalty[cut_type]==0:
+            low_pen = 0
 
-    for r in rules[EXISTENCE]:
-        if r in S1:
-            exclude.append('exc')
-        elif r in S2:
-            exclude.append('exc')
-            exclude.append('loop')
-
-
-
-    for r in rules[NONSUCCESSION]:
-        if r[0] in S1 and r[1] in S2:
-            exclude.append('seq')
-            exclude.append('loop')
-            exclude.append('loop_tau')
-            exclude.append('par')
-            # block = True
-        elif r[0] in S2 and r[1] in S1:
-            exclude.append('par')
-            exclude.append('loop')
-            exclude.append('loop_tau')
-        elif r[0] in S1 and r[1] in S1:
-            exclude.append('loop')
-            exclude.append('loop_tau')
-        elif r[0] in S2 and r[1] in S2:
-            exclude.append('loop')
-            exclude.append('loop_tau')
+    # if sum(penalty.values())>0:
+    #     print(penalty)
+    # print(low_pen)
+    return set(exclude), set(), penalty,low_pen
 
 
+def is_allowed_single(activity, rules):
+    penalty = {'single_single': 0, 'xor_single': 0, 'loop_single': 0}
 
-    for r in rules[RESPONDED_EXISTENCE]:
-        if r[0] in S1 and r[1] in S2:
-            exclude.append('exc')
-            exclude.append('loop')
-        elif r[0] in S2 and r[1] in S1:
-            exclude.append('exc')
+    da_list = rules[1]
+    S_mapped = rules[2]
+    exclude = []
 
+    for cut_type in {'single_single', 'xor_single', 'loop_single'}:
+        for dfa in da_list:
+            # if ("Absence" in dfa[0][0] or "Init" in dfa[0][0] or "End" in dfa[0][0] or "AtMost" in dfa[0][0] or "AtLeast" in dfa[0][0]):
+            if dfa[0][1]==S_mapped[activity]:
+                if (declare_processing.check_all_single(S_mapped[activity], dfa[1],
+                                                 cut_type, S_mapped)):
+                    print(dfa[0])
+                    exclude.append(cut_type)
+                    penalty[cut_type] += dfa[2]
 
-    for r in rules[NONCOEXISTENCE]:
-        if r[0] in S1 and r[1] in S2:
-            exclude.append('par')
-            exclude.append('seq')
-            exclude.append('loop')
-            exclude.append('loop_tau')
-        elif r[0] in S2 and r[1] in S1:
-            exclude.append('par')
-            exclude.append('seq')
-            exclude.append('loop')
-            exclude.append('loop_tau')
-        elif r[0] in S1 and r[1] in S1:
-            exclude.append('loop')
-            exclude.append('loop_tau')
-        elif r[0] in S2 and r[1] in S2:
-            exclude.append('loop')
-            exclude.append('loop_tau')
-
-
-    for r in rules[COEXISTENCE]:
-        if r[0] in S1 and r[1] in S2:
-            exclude.append('exc')
-            exclude.append('loop')
-        elif r[0] in S2 and r[1] in S1:
-            exclude.append('exc')
-            exclude.append('loop')
-
-
-    for r in rules[RESPONSE]:
-        if (r[1], r[0]) not in rules[PRECEDENCE]:
-            if r[0] in S1 and r[1] in S2:
-                exclude.append('exc')
-                exclude.append('loop')
-                exclude.append('par')
-            if r[0] in S2 and r[1] in S1:
-                exclude.append('exc')
-                exclude.append('seq')
-                exclude.append('par')
-                block = True
-
-        else:
-            if r[0] in S1 and r[1] in S2:
-                exclude.append('exc')
-                exclude.append('loop')
-                exclude.append('par')
-            if r[0] in S2 and r[1] in S1:
-                exclude.append('exc')
-                exclude.append('seq')
-                exclude.append('par')
-
-    for r in rules[PRECEDENCE]:
-        if (r[1], r[0]) not in rules[RESPONSE]:
-            if r[0] in S1 and r[1] in S2:
-                exclude.append('par')
-                exclude.append('exc')
-
-            if r[0] in S2 and r[1] in S1:
-                exclude.append('exc')
-                exclude.append('loop')
-                exclude.append('seq')
-                exclude.append('par')
-
-                block = True
-        else:
-            if r[0] in S1 and r[1] in S2:
-                exclude.append('par')
-                exclude.append('exc')
-
-            if r[0] in S2 and r[1] in S1:
-                exclude.append('exc')
-                exclude.append('loop')
-                exclude.append('seq')
-                exclude.append('par')
-
-    return set(exclude), block
-
+    return set(exclude), penalty

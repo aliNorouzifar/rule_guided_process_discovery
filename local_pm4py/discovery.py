@@ -1,31 +1,18 @@
-from typing import Optional, Dict, Any, Union, Tuple
-from pm4py.objects.log.obj import EventLog, EventStream
+from typing import Optional, Dict, Any, Tuple
 from pm4py.objects.petri_net.obj import PetriNet, Marking
-import pandas as pd
 from pm4py import util as pmutil
-from pm4py.algo.discovery.dfg.variants import native as dfg_inst
 from pm4py.objects.conversion.process_tree import converter as tree_to_petri
-from pm4py.objects.log.obj import EventLog, Trace, Event
-from pm4py.objects.log.util import filtering_utils
 from pm4py.objects.process_tree.utils import generic
 from pm4py.objects.process_tree.utils.generic import tree_sort
-from pm4py.statistics.attributes.log import get as attributes_get
-from pm4py.statistics.end_activities.log import get as end_activities_get
-from pm4py.statistics.start_activities.log import get as start_activities_get
-from pm4py.util import exec_utils
-from pm4py.util import variants_util
-from pm4py.util import xes_constants
-from pm4py.util import constants
-from enum import Enum
-import deprecation
-# from local_pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from local_pm4py.subtree_plain import SubtreePlain
-from pm4py.algo.discovery.dfg.utils.dfg_utils import get_activities_self_loop
 from pm4py.objects.process_tree.obj import ProcessTree
 from pm4py.objects.process_tree.obj import Operator
 from pm4py.util import exec_utils, xes_constants
 from pm4py.util import constants
 from enum import Enum
+
+from collections import Counter
+import json
 
 
 class Parameters(Enum):
@@ -36,39 +23,30 @@ class Parameters(Enum):
 
 
 
-def apply_bi(logp, logm, parameters: Optional[Dict[Any, Any]] = None, sup= None, ratio = None, size_par = None, rules =None) -> Tuple[PetriNet, Marking, Marking]:
-
-    process_tree = apply_tree(logp, logm, parameters, sup=sup, ratio=ratio, size_par=size_par, rules=rules)
+def apply_bi(logp, logm, parameters: Optional[Dict[Any, Any]] = None, sup= None, ratio = None, noise_thr =None, size_par = None, rules =None) -> Tuple[PetriNet, Marking, Marking]:
+    file_path = 'data_list.json'
+    with open(file_path, 'w') as file:
+        json.dump([], file, indent=4)
+    process_tree = apply_tree(logp, logm, parameters, sup=sup, ratio=ratio, noise_thr=noise_thr, size_par=size_par, rules=rules)
     net, initial_marking, final_marking = tree_to_petri.apply(process_tree)
 
     return net, initial_marking, final_marking
 
 
 
-def apply_tree(logp,logm, parameters=None, sup= None, ratio = None, size_par = None, rules= None):
+def apply_tree(logp,logm, parameters=None, sup= None, ratio = None, noise_thr =None, size_par = None, rules= None):
     if parameters is None:
         parameters = {}
-
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, parameters,
-                                              pmutil.xes_constants.DEFAULT_NAME_KEY)
-
-
-    dfgp = [(k, v) for k, v in dfg_inst.apply(logp, parameters=parameters).items() if v > 0]
-    dfgm = [(k, v) for k, v in dfg_inst.apply(logm, parameters=parameters).items() if v > 0]
-
-    c = Counts()
-    activitiesp = attributes_get.get_attribute_values(logp, activity_key)
-    start_activitiesp = list(start_activities_get.get_start_activities(logp, parameters=parameters).keys())
-    end_activitiesp = list(end_activities_get.get_end_activities(logp, parameters=parameters).keys())
     contains_empty_traces = False
     traces_length = [len(trace) for trace in logp]
     if traces_length:
         contains_empty_traces = min([len(trace) for trace in logp]) == 0
 
     recursion_depth = 0
-    sub = make_tree(logp,logm, dfgp, dfgp, dfgp, activitiesp, c, recursion_depth, 0.0, start_activitiesp,
-                            end_activitiesp,
-                            start_activitiesp, end_activitiesp, parameters, sup= sup, ratio = ratio, size_par = size_par, rules= rules)
+
+    logP_var = Counter(tuple([x['concept:name'] for x in t]) for t in logp)
+    logM_var = Counter(tuple([x['concept:name'] for x in t]) for t in logm)
+    sub = SubtreePlain(logP_var,logM_var, recursion_depth, noise_thr, parameters=parameters, sup= sup, ratio = ratio, size_par = size_par, rules= rules)
 
     process_tree = get_repr(sub, 0, contains_empty_traces=contains_empty_traces)
     # Ensures consistency to the parent pointers in the process tree
@@ -83,24 +61,14 @@ def apply_tree(logp,logm, parameters=None, sup= None, ratio = None, size_par = N
     return process_tree
 
 
-def make_tree(logp, logm, dfg, master_dfg, initial_dfg, activities, c, recursion_depth, noise_threshold, start_activities,
-              end_activities, initial_start_activities, initial_end_activities, parameters=None, sup= None, ratio = None, size_par = None, rules = None):
-
-    tree = SubtreePlain(logp,logm, dfg, master_dfg, initial_dfg, activities, c, recursion_depth, noise_threshold,
-                        start_activities,
-                        end_activities, initial_start_activities, initial_end_activities, parameters=parameters, sup= sup, ratio = ratio, size_par = size_par, rules= rules)
-    return tree
-
 
 def get_repr(spec_tree_struct, rec_depth, contains_empty_traces=False):
 
-    activity_key = exec_utils.get_param_value(Parameters.ACTIVITY_KEY, spec_tree_struct.parameters,
-                                              xes_constants.DEFAULT_NAME_KEY)
+
 
     base_cases = ('empty_log', 'single_activity')
-    cut = ('concurrent', 'sequential', 'parallel', 'loopCut')
-    # note that the activity_once_per_trace is not included here, as it is can be dealt with as a parallel cut
-    fall_throughs = ('empty_trace', 'strict_tau_loop', 'tau_loop', 'flower')
+    cut = ('xor', 'sequential', 'parallel', 'loopCut')
+
 
     # if a cut was detected in the current subtree:
     if spec_tree_struct.detected_cut in cut:
@@ -108,7 +76,7 @@ def get_repr(spec_tree_struct, rec_depth, contains_empty_traces=False):
             final_tree_repr = ProcessTree(operator=Operator.SEQUENCE)
         elif spec_tree_struct.detected_cut == "loopCut":
             final_tree_repr = ProcessTree(operator=Operator.LOOP)
-        elif spec_tree_struct.detected_cut == "concurrent":
+        elif spec_tree_struct.detected_cut == "xor":
             final_tree_repr = ProcessTree(operator=Operator.XOR)
         elif spec_tree_struct.detected_cut == "parallel":
             final_tree_repr = ProcessTree(operator=Operator.PARALLEL)
@@ -148,56 +116,8 @@ def get_repr(spec_tree_struct, rec_depth, contains_empty_traces=False):
             return ProcessTree(operator=None, label=None)
         # in the base case of a single activity, we return a tree consisting of the single activity
         elif spec_tree_struct.detected_cut == "single_activity":
-            if len(spec_tree_struct.log[0]) != 0:
-                act_a = spec_tree_struct.log[0][0][activity_key]
-            else:
-                l = spec_tree_struct.log
-                l = sorted(l, key=lambda x: len(x))
-                act_a = l[-1][0][activity_key]
+            act_a = spec_tree_struct.activitiesP.pop()
             return ProcessTree(operator=None, label=act_a)
-
-    if spec_tree_struct.detected_cut in fall_throughs:
-        if spec_tree_struct.detected_cut == "empty_trace":
-            # should return XOR(tau, IM(L') )
-            final_tree_repr = ProcessTree(operator=Operator.XOR)
-            final_tree_repr.children.append(ProcessTree(operator=None, label=None))
-            # iterate through all children of the current node
-            for ch in spec_tree_struct.children:
-                child = get_repr(ch, rec_depth + 1)
-                final_tree_repr.children.append(child)
-                child.parent = final_tree_repr
-
-        elif spec_tree_struct.detected_cut == "strict_tau_loop" or spec_tree_struct.detected_cut == "tau_loop":
-            # should return LOOP( IM(L'), tau)
-            final_tree_repr = ProcessTree(operator=Operator.LOOP)
-            # iterate through all children of the current node
-            if spec_tree_struct.children:
-                for ch in spec_tree_struct.children:
-                    child = get_repr(ch, rec_depth + 1)
-                    final_tree_repr.children.append(child)
-                    child.parent = final_tree_repr
-            else:
-                for ch in spec_tree_struct.activities:
-                    child = get_transition(ch)
-                    final_tree_repr.append(child)
-                    child.parent = final_tree_repr
-
-            # add a silent tau transition as last child of the current node
-            final_tree_repr.children.append(ProcessTree(operator=None, label=None))
-
-        elif spec_tree_struct.detected_cut == "flower":
-            # should return something like LOOP(XOR(a,b,c,d,...), tau)
-            final_tree_repr = ProcessTree(operator=Operator.LOOP)
-            xor_child = ProcessTree(operator=Operator.XOR, parent=final_tree_repr)
-            # append all the activities in the current subtree to the XOR part to allow for any behaviour
-            for ch in spec_tree_struct.activities:
-                child = get_transition(ch)
-                xor_child.children.append(child)
-                child.parent = xor_child
-            final_tree_repr.children.append(xor_child)
-            # now add the tau to the children to get the wanted output
-            final_tree_repr.children.append(ProcessTree(operator=None, label=None))
-
     return final_tree_repr
 
 

@@ -1,57 +1,49 @@
+from local_pm4py.functions.functions import n_edges
+from local_pm4py.candidate_search.is_allowed_2 import is_allowed_single
+def check_base_case(netP, netM,rules ,sup_thr, ratio,self):
+    activitiesP = set(netP.nodes) - {'start', 'end'}
+    activitiesM = set(netM.nodes) - {'start', 'end'}
 
 
-
-
-def check_base_case(self, logP, logM, sup_thr, ratio, size_par):
-    activitiesP = set(a for x in logP.keys() for a in x)
-
-    if len(activitiesP) <= 1:
-        base_check = True
-        counter = logP[()]
-        counterM = logM[()]
-        len_logP = sum(logP.values())
-        acc_contP = sum([len(x) * logP[x] for x in logP])
-        len_logM = sum(logM.values())
-        acc_contM = sum([len(x) * logM[x] for x in logM])
-
-        # empty check
-        if (counter == len_logP) or (len_logP == 0):
-            self.detected_cut = 'empty_log'
-            cut = ('none', 'empty_log', 'none', 'none')
-        else:
-            # xor check
-            cost_single_exc = max(0, sup_thr * len_logP - counter) - ratio * size_par * max(0,sup_thr * len_logM - counterM)
-            if (counter > (sup_thr / 2) * len_logP) and (cost_single_exc <= 0):
-            # if (cost_single_exc <= 0):
-                cut = (({activitiesP.pop()}, set()), 'exc', 'none', 'none')
-            else:
-                # loop check
-                del logP[()]
-                if acc_contP > 0:
-                    p_prime_Lp = (len_logP - counter) / ((len_logP - counter) + acc_contP)
-                else:
-                    p_prime_Lp = 'nd'
-
-                if acc_contM > 0:
-                    p_prime_Lm = (len_logM - counterM) / ((len_logM - counterM) + acc_contM)
-                else:
-                    p_prime_Lm = 'nd'
-
-                if p_prime_Lm != 'nd':
-                    cost_single_loop = max(0, sup_thr/2 - abs(p_prime_Lp - 0.5)) - ratio * size_par * max(0,sup_thr/2 - abs(p_prime_Lm - 0.5))
-                else:
-                    # cost_single_loop = max(0, sup_thr/2 - ratio * size_par * abs(p_prime_Lp - 0.5))
-                    cost_single_loop = max(0, sup_thr / 2 - abs(p_prime_Lp - 0.5))
-
-                if (abs(p_prime_Lp - 0.5) > sup_thr / 2) and (cost_single_loop <= 0):
-                # if (cost_single_loop <= 0):
-                    cut = (({activitiesP.pop()}, set()), 'loop1', 'none', 'none')
-                else:
-                    # single activity
-                    self.detected_cut = 'single_activity'
-                    cut = ('none', 'single_activity', 'none', 'none')
-    else:
+    if len(activitiesP)>1:
         base_check = False
         cut = "not_base"
+    elif len(activitiesP)==0:
+        base_check = True
+        self.detected_cut = 'empty_log'
+        cut = ('none', 'empty_log', 'none', 'none')
+    else:
+        base_check = True
+        act = activitiesP.pop()
+        na, penalty = is_allowed_single(act, rules)
+        #if absent we do not want to hide a transition!
+        if na == {'single_single', 'xor_single', 'loop_single'}:
+            # self.detected_cut = 'empty_log'
+            # cut = ('none', 'empty_log', 'none', 'none')
+            print('na includes all in base case check')
 
+        cP = max(0, sup_thr * n_edges(netP,{'start'},{act, 'end'})-n_edges(netP,{'start'}, {'end'}))
+        cM = max(0,sup_thr * n_edges(netM,{'start'},{act, 'end'})-n_edges(netM,{'start'}, {'end'}))
+        cost_single_exc =  cP - ratio * self.size_adj * cM
+        if (cost_single_exc <= 0) and n_edges(netP,{'start'}, {'end'}) > 0 and 'xor_single' not in na:
+            cut = ((({act}, set()), 'exc2', cP, cM,cost_single_exc,{str(act): {'missing': cP, 'deviating': 0}},{str(act): {'missing': cM, 'deviating': 0}}))
+        else:
+            clP = max(0,sup_thr* ((n_edges(netP,{'start',act},{act}))/2)-n_edges(netP,{act},{act}))
+
+            if len(activitiesM) > 0:
+                clM = max(0, sup_thr * ((n_edges(netM, {'start', act}, {act})) / 2) - n_edges(netM, {act}, {act}))
+            else:
+                clM = max(0, sup_thr * ((n_edges(netM, {'start', act}, {act})) / 2))
+            cost_single_loop = clP - ratio * self.size_adj * clM
+            if (cost_single_loop <= 0) and n_edges(netP,{act},{act})>0 and 'loop_single' not in na:
+                cut = (({act}, set()), 'loop1', 'none', 'none')
+            else:
+                # single activity
+                self.detected_cut = 'single_activity'
+                cut =((
+                ({act}, set()), 'single_activity', n_edges(netP,{'start'}, {'end'}), n_edges(netM,{'start'}, {'end'}),
+                n_edges(netP,{'start'}, {'end'}) - ratio * self.size_adj * n_edges(netM,{'start'}, {'end'}),
+                {str(act): {'deviating': n_edges(netP,{'start'}, {'end'}), 'missing': 0}},
+                {str(act): {'deviating': n_edges(netM,{'start'}, {'end'}), 'missing': 0}}))
     return base_check, cut
+
