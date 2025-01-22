@@ -13,6 +13,7 @@ import ast
 import os
 import time
 from pathlib import Path
+print("hi")
 def rules_from_json(file_path):
     with open(file_path, 'r') as file:
         declare_file = json.load(file)
