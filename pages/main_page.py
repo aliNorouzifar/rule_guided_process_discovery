@@ -282,12 +282,13 @@ def IMr_params_show():
             className="flex-column align-center")
     ])
 
-def rule_related_statistics_show(N_rules, N_dev, support_cost,confidence_cost):
+def rule_related_statistics_show(N_rules, N_dev, support_cost,confidence_cost, dev_list):
     return [
         f"The Number of rules used in the discovery is: {N_rules}",
         f"The Number of deviating rules considering the discovered model is: {N_dev}",
         f"The Number of deviation ratio considering the discovered model and support is: {support_cost}",
         f"The Number of deviation ratio considering the discovered model and confidence is: {confidence_cost}"
+        f"The most significant deviations (based on support cost), maximum 10 of them: {dev_list}"
     ]
 
 def conformance_related_statistics_show(fit, prc):

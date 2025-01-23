@@ -10,7 +10,7 @@ from functions.declare.minerful_calls import discover_declare
 from pathlib import Path
 from functions.discovery import run_IMr
 import json
-from functions.functions.evaluation import conformance_checking
+from functions.functions.evaluation import conformance_checking,extract_significant_dev
 
 
 UPLOAD_FOLDER = "event_logs"
@@ -106,7 +106,8 @@ def register_callbacks(app):
         # Open and read the JSON file
         with open(os.path.join(r"output_files/", "stats.json"), "r") as file:
             data = json.load(file)
-        statistics = rule_related_statistics_show(data["N.rules"], data["N.dev"], data["support_cost"], data["confidence_cost"])
+        dev_rank = extract_significant_dev(data["dev_list"])
+        statistics = rule_related_statistics_show(data["N.rules"], data["N.dev"], data["support_cost"], data["confidence_cost"],dev_rank)
         return [html.P(line) for line in statistics]
 
     @app.callback(
