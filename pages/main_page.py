@@ -25,7 +25,7 @@ def create_layout():
                 className="nav-links",
                 children=[
                     dcc.Link("Introduction", href="/", className="nav-link"),
-                    dcc.Link("X-PVI", href="/main", className="nav-link"),
+                    dcc.Link("IMr", href="/main", className="nav-link"),
                     dcc.Link("About Me", href="/about_me", className="nav-link"),
                 ],
             ),
@@ -33,9 +33,9 @@ def create_layout():
             html.Div(
                 className="tool-name-container",
                 children=[
-                    html.H1("Process Variant Identification", className="tool-name"),
+                    html.H1("Rule-guided Process Discovery", className="tool-name"),
                     html.P(
-                        "A cutting-edge tool for detecting and understanding process variability across performance dimensions.",
+                        "A cutting-edge tool for discovering process models from event logs considering rules as input.",
                         className="tool-subtitle",
                     ),
                 ],
@@ -177,7 +177,7 @@ def get_upload_component(id):
 
 def rule_src_selection():
     return html.Div([
-        html.H4("What is the rule source?:"),
+        html.H4("What is the rule source?:",className="parameter-name"),
         dcc.RadioItems(
             id='rule_src',
             options=[
@@ -185,7 +185,7 @@ def rule_src_selection():
                 {'label': 'Import from local drive!', 'value': 'manual'},
             ],
             value=["manual"],  # Default selected values
-            inline=False  # Display options inline
+            inline=True  # Display options inline
         )
     ])
 
@@ -227,7 +227,8 @@ def show_Minerful_params():
                             id='support_val',
                             min=0,
                             max=1,
-                            value=0.005
+                            value=0.005,
+                            size=200
                         ),
                         html.Div(id='numeric-input-output-1')
                     ]),
@@ -238,7 +239,8 @@ def show_Minerful_params():
                             id='confidence_val',
                             min=0,
                             max=1,
-                            value=0.99
+                            value=0.99,
+                            size=200
                         ),
                         html.Div(id='numeric-input-output-2')
                     ]),
@@ -297,220 +299,3 @@ def conformance_related_statistics_show(fit, prc):
         f"The precision value is: {prc}",
     ]
 
-
-
-# def IMr_figures(gviz):
-#     str(gviz), "dot"
-#     return html.Div(
-#         id="bottom-section",
-#         className="page-container",
-#         children=[
-#             html.Div(
-#                 className="section-header",
-#                 children=html.H4("Discovered Petri Net", className="section-title"),
-#             ),
-#             html.Div(
-#                 dash_interactive_graphviz.DashInteractiveGraphviz(id="gv"),
-#                 style=dict(flexGrow=1, position="relative"),
-#             ),
-#             # html.Img(id="petri_net_model", src=gviz, className="figure figure-large"),
-#             # html.Img(id="bar-graph-matplotlib4", src=fig_src4, className="figure figure-medium"),
-#             # html.Button(id="decl2NL_framework", children="Convert Declare to Natural Language!", className="btn-secondary", n_clicks=0)
-#         ]
-#     )
-
-
-# def parameters_view_PVI(max_par, columns):
-#     return html.Div([
-#         html.Div([
-#             html.Div(
-#                 className="parameter-container",
-#                 children=[
-#                     html.Div(
-#                         className="section-header",
-#                         children=html.H4("Process Variant Identification Parameters", className="section-title"),
-#                     ),
-#                     # html.Hr(),
-#                     html.H4("process indicator:", className="parameter-name"),
-#                     dcc.Dropdown(id='xaxis-data', options=[{'label': x, 'value': x} for x in columns]),
-#                     html.Hr(),
-#                     html.H4("N. buckets:", className="parameter-name"),
-#                     html.Div([
-#                         daq.NumericInput(
-#                             id='my-numeric-input-1',
-#                             min=2,
-#                             max=max_par,
-#                             value=min(100, max_par)
-#                         ),
-#                         html.Div(id='numeric-input-output-1')
-#                     ]),
-#                     html.Hr(),
-#                     html.H4("Window size:", className="parameter-name"),
-#                     html.Div([
-#                         daq.NumericInput(
-#                             id='my-numeric-input-2',
-#                             min=0,
-#                             max=max_par / 2,
-#                             value=2
-#                         ),
-#                         html.Div(id='numeric-input-output-2')
-#                     ]),
-#                     html.Hr(),
-#                     html.H4("significant distance:", className="parameter-name"),
-#                     html.Div([
-#                         daq.Knob(
-#                             id='my-slider3',
-#                             min=0,
-#                             max=1,
-#                             value=0.15,
-#                             size=100,  # Size of the circular slider
-#                             color="#007bff",  # Customize the color
-#                             # label="Significant Distance",
-#                             scale={'interval': 0.1}
-#                         ),
-#                         html.Div(id='slider-output-container3')
-#                     ]),
-#                     html.Hr(),
-#                     html.H4("Faster (not accurate)?", className="parameter-name"),
-#                     dcc.RadioItems(
-#                         id='TF',
-#                         options=[
-#                             {'label': 'True', 'value': True},
-#                             {'label': 'False', 'value': False}
-#                         ],
-#                         value=False,
-#                         inline=True
-#     ),
-#                     html.Hr(),
-#                     html.H4("Export the segments?", className="parameter-name"),
-#                     dcc.RadioItems(
-#                         id='TF2',
-#                         options=[
-#                             {'label': 'True', 'value': True},
-#                             {'label': 'False', 'value': False}
-#                         ],
-#                         value=False,
-#                         inline=True
-#                     ),
-#                     html.Hr(),
-#                     html.Button(id="run_PVI", children="Run PVI", className="btn-primary", n_clicks=0),
-#                     # html.Hr(),
-#                 ]
-#             )
-#         ],
-#         className="flex-column align-center")
-#     ])
-#
-# def parameters_view_explainability():
-#     return html.Div([
-#         html.Div([
-#             html.Div(
-#                 className="parameter-container",
-#                 children=[
-#                     html.Div(
-#                         className="section-header",
-#                         children=html.H4("Explainability Extraction parameters", className="section-title"),
-#                     ),
-#                     # html.Hr(),
-#                     html.H4("theta_cvg for pruning?", className="parameter-name"),
-#                     html.Div([
-#                         dcc.Input(
-#                             id='my-numeric-input-3',
-#                             type='number',
-#                             min=0,
-#                             max=1,
-#                             value=0.02,
-#                             step=0.01  # Specify the step size here
-#                         ),
-#                         html.Div(id='numeric-input-output-3')
-#                     ]),
-#                     html.Hr(),
-#                     html.H4("Number of Clusters?", className="parameter-name"),
-#                     html.Div([
-#                         daq.NumericInput(
-#                             id='my-numeric-input-4',
-#                             min=0,
-#                             max=20,
-#                             value=5
-#                         ),
-#                         html.Div(id='numeric-input-output-4')
-#                     ]),
-#                     html.Hr(),
-#                     html.Button(id="XPVI_run", children="XPVI Run", className="btn-primary", n_clicks=0)
-#                 ]
-#             )
-#         ],
-#         className="flex-column align-center")
-#     ])
-#
-# def decl2NL_parameters():
-#     data = load_variables()
-#     segments_count = data["segments_count"]
-#     clusters_count = data["clusters_count"]
-#     return html.Div([
-#         html.Div(className="parameter-container",
-#             children=[
-#                 html.Div(
-#                     className="section-header",
-#                     children=html.H4("Report Generation Parameters", className="section-title"),
-#                 ),
-#                 html.H4("Which segment?", className="parameter-name"),
-#                 dcc.Dropdown(id='segment_number', options=[{'label': x, 'value': x} for x in range(1, segments_count + 1)]),
-#                 html.Hr(),
-#                 html.H4("Which cluster?", className="parameter-name"),
-#                 dcc.Dropdown(id='cluster_number', options=[{'label': x, 'value': x} for x in range(1, clusters_count + 1)]),
-#                 html.Hr(),
-#                 html.Button(id="decl2NL_pars", children="Show decl2NL parameters!", className="btn-primary", n_clicks=0)
-#             ]
-#         )
-#     ])
-#
-#
-# def PVI_figures(fig_src1, fig_src2):
-#     return html.Div(
-#         id="bottom-section",
-#         className="page-container",
-#         children=[
-#             html.Div(
-#                 className="section-header",
-#                 children=html.H4("Process Variant Identification Visualizations", className="section-title"),
-#             ),
-#             html.Img(id="bar-graph-matplotlib", src=fig_src1, className="figure figure-large"),
-#             html.Img(id="bar-graph-matplotlib2", src=fig_src2, className="figure figure-small"),
-#             html.Button(id="X_parameters", children="Start The Explainability Extraction Framework!", className="btn-secondary", n_clicks=0)
-#         ]
-#     )
-#
-#
-# def XPVI_figures(fig_src3, fig_src4):
-#     return html.Div(
-#         id="bottom-section",
-#         className="page-container",
-#         children=[
-#             html.Div(
-#                 className="section-header",
-#                 children=html.H4("Explainability Extraction Visualizations", className="section-title"),
-#             ),
-#             html.Img(id="bar-graph-matplotlib3", src=fig_src3, className="figure figure-large"),
-#             html.Img(id="bar-graph-matplotlib4", src=fig_src4, className="figure figure-medium"),
-#             html.Button(id="decl2NL_framework", children="Convert Declare to Natural Language!", className="btn-secondary", n_clicks=0)
-#         ]
-#     )
-#
-#
-#
-#
-# def statistics_print(list_sorted, list_sorted_reverse):
-#     return html.Div(
-#         className="page-container",
-#         children=[
-#             html.Div(
-#                 className="section-header",
-#                 children=html.H4("Natual Language Report", className="section-title"),
-#             ),
-#             html.H4("Lowest Scores:", className='text-left bg-light mb-4'),
-#             html.Ul([html.Li(sentence, className="list-item") for sentence in list_sorted]),
-#             html.H4("Highest Scores:", className='text-left bg-light mb-4'),
-#             html.Ul([html.Li(sentence, className="list-item") for sentence in list_sorted_reverse])
-#         ]
-#     )

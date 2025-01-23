@@ -10,7 +10,7 @@ layout = dbc.Container(
             className="nav-links",
             children=[
                 dcc.Link("Introduction", href="/", className="nav-link"),
-                dcc.Link("X-PVI", href="/main", className="nav-link"),
+                dcc.Link("IMr", href="/main", className="nav-link"),
                 dcc.Link("About Me", href="/about_me", className="nav-link"),
             ],
         ),
@@ -18,9 +18,9 @@ layout = dbc.Container(
         html.Div(
             className="tool-name-container",
             children=[
-                html.H1("Process Variant Identification", className="tool-name"),
+                html.H1("Rule-guided Process Discovery", className="tool-name"),
                 html.P(
-                    "A cutting-edge tool for detecting and understanding process variability across performance dimensions.",
+                    "A cutting-edge tool for discovering process models from event logs considering rules as input.",
                     className="tool-subtitle",
                 ),
             ],
