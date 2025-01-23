@@ -22,12 +22,15 @@ from pm4py.visualization.petri_net import visualizer as pn_visualizer
 from pm4py.objects.petri_net.utils.reachability_graph import construct_reachability_graph
 from pm4py.objects.log import obj as log_instance
 from functions.analysis import gui
+from pm4py.objects.log.importer.xes import importer as xes_importer
 import ast
 import os
 import time
 from pathlib import Path
 from functions.utils import rules_from_json, preprocess, dfa_list_generator
 import functions.functions.declare_processing as declare_processing
+import plotly.graph_objects as go
+import networkx as nx
 
 class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
@@ -212,7 +215,7 @@ def fix_one_child_xor_flower(tree):
 def run_IMr(LPlus_LogFile,rules_path,support):
 
     lookup_table_path = Path("assets") / "lookup_table.csv"
-    event_log_xes = pm4py.read_xes(str(LPlus_LogFile))
+    event_log_xes = xes_importer.apply(str(LPlus_LogFile))
     logM = log_instance.EventLog()
     logM.append(log_instance.Trace())
 
@@ -233,9 +236,9 @@ def run_IMr(LPlus_LogFile,rules_path,support):
 
     S_mapped = declare_processing.assign_alphabet(activities)
 
-    print('conversion or rules to DFAs started')
+    print('conversion of rules to DFAs started')
     dfa_list, total_sup, total_conf = dfa_list_generator(rules_proccessed, S_mapped)
-    print('conversion or rules to DFAs ended')
+    print('conversion of rules to DFAs ended')
 
     print(f"_______________ support is {support}_____________________")
     print('process discovery started')
@@ -246,7 +249,7 @@ def run_IMr(LPlus_LogFile,rules_path,support):
     print(end - start)
     print('process discovery ended')
 
-    pm4py.write_pnml(net, initial_marking, final_marking, os.path.join(r"outputs", f"IMr_{round(10 * support)}.pnml"))
+    pm4py.write_pnml(net, initial_marking, final_marking, os.path.join(r"output_files", "model.pnml"))
 
 
 
@@ -274,12 +277,12 @@ def run_IMr(LPlus_LogFile,rules_path,support):
     report['confidence_cost'] = round(conf_cost / total_conf, 2)
     report['dev_list'] = [(x[0][0], x[0][1], round(x[2], 2), round(x[3], 2)) for x in cond if x[1] == False]
 
-    with open(os.path.join(r"outputs/", f"IMr_{round(10 * support)}.json"), "w") as json_file:
+    with open(os.path.join(r"output_files/", "stats.json"), "w") as json_file:
         json.dump(report, json_file, indent=4)
 
     print('The report is generated')
 
     parameters = {pn_visualizer.Variants.WO_DECORATION.value.Parameters.FORMAT: "png"}
     gviz = pn_visualizer.apply(net, initial_marking, final_marking, parameters=parameters)
-    # pn_visualizer.view(gviz)
+    gviz.attr("graph", bgcolor="transparent")
     return gviz

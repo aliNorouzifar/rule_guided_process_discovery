@@ -313,3 +313,22 @@ img {
 .link-item:hover {
     background-color: #0056b3;
 }
+
+
+.graph-slider-container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.slider-container {
+    width: 10%;
+    margin-right: 10px;
+}
+
+.graph-container {
+    flex-grow: 1;
+    border: 1px solid #ddd;
+    height: 500px;
+    position: relative;
+}
