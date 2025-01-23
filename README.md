@@ -11,8 +11,7 @@ A cutting-edge tool for process analysis and variant detection, designed to help
 4. [Installation](#installation)
 5. [Usage](#usage)
 6. [Run with Docker](#run-with-docker)
-7. [Sample Event Log](#sample-event-log)
-8. [Contact](#contact)
+7. [Contact](#contact)
 
 ---
 ## **Introduction**
