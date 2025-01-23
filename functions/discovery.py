@@ -1,27 +1,21 @@
 from typing import Optional, Dict, Any, Tuple
 from pm4py.objects.petri_net.obj import PetriNet, Marking
-from pm4py import util as pmutil
 from pm4py.objects.conversion.process_tree import converter as tree_to_petri
 from pm4py.objects.process_tree.utils import generic
 from pm4py.objects.process_tree.utils.generic import tree_sort
 from functions.subtree_plain import SubtreePlain
 from pm4py.objects.process_tree.obj import ProcessTree
 from pm4py.objects.process_tree.obj import Operator
-from pm4py.util import exec_utils, xes_constants
 from pm4py.util import constants
 from enum import Enum
-
 from collections import Counter
-import json
 import json
 import pandas as pd
 import pm4py
 from automata.fa.dfa import DFA
-# from pm4py.objects.log.importer.xes import importer as xes_importer
 from pm4py.visualization.petri_net import visualizer as pn_visualizer
 from pm4py.objects.petri_net.utils.reachability_graph import construct_reachability_graph
 from pm4py.objects.log import obj as log_instance
-from functions.analysis import gui
 from pm4py.objects.log.importer.xes import importer as xes_importer
 import ast
 import os
@@ -29,8 +23,7 @@ import time
 from pathlib import Path
 from functions.utils import rules_from_json, preprocess, dfa_list_generator
 import functions.functions.declare_processing as declare_processing
-import plotly.graph_objects as go
-import networkx as nx
+
 
 class Parameters(Enum):
     ACTIVITY_KEY = constants.PARAMETER_CONSTANT_ACTIVITY_KEY
@@ -41,7 +34,7 @@ class Parameters(Enum):
 
 
 def apply_bi(logp, logm, parameters: Optional[Dict[Any, Any]] = None, sup= None, ratio = None, noise_thr =None, size_par = None, rules =None) -> Tuple[PetriNet, Marking, Marking]:
-    file_path = 'data_list.json'
+    file_path = r'output_files\discovery_log.json'
     with open(file_path, 'w') as file:
         json.dump([], file, indent=4)
     process_tree = apply_tree(logp, logm, parameters, sup=sup, ratio=ratio, noise_thr=noise_thr, size_par=size_par, rules=rules)
@@ -219,7 +212,7 @@ def run_IMr(LPlus_LogFile,rules_path,support):
     logM = log_instance.EventLog()
     logM.append(log_instance.Trace())
 
-    rules, activities = rules_from_json(rules_path)
+    rules, activities = rules_from_json(str(rules_path))
     rules_proccessed, absence_list = preprocess(rules)
 
     event_log_xes = pm4py.filter_event_attribute_values(
