@@ -1,6 +1,6 @@
 
 
-FROM python:3.10
+FROM python:3.11
 
 # Set environment variables for the JDK
 ENV JAVA_HOME=/usr/lib/jvm/jdk-21
@@ -26,6 +26,6 @@ EXPOSE 8002
 
 CMD ["python", "app.py"]
 
-LABEL org.opencontainers.image.source="https://github.com/alinorouzifar/x-pvi"
+LABEL org.opencontainers.image.source="https://github.com/aliNorouzifar/rule_guided_process_discovery"
 
 ENV PATH="/usr/lib/jvm/java-11-openjdk-amd64/bin:$PATH"
