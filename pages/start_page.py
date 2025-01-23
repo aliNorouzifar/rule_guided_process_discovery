@@ -31,7 +31,7 @@ layout = dbc.Container(
             children=[
                 html.H2("Welcome to IMr!", className="section-title"),
                 html.P(
-                    "Processes often exhibit significant variability, posing challenges for process discovery and insight extraction. X-PVI helps you identify and explain these variations, empowering data-driven decision-making.",
+                    "IMr enhances process discovery by integrating domain knowledge and process rules, allowing for the creation of high-quality process models that align with both event data and expert knowledge.",
                     className="content",
                 ),
                 dcc.Link(
@@ -47,23 +47,29 @@ layout = dbc.Container(
             children=[
                 html.H2("Background and Context", className="section-title"),
                 html.P(
-                    "This tool is based on a novel framework introduced in a recent study that focuses on uncovering process variability across multiple dimensions, including control-flow changes, case durations, and performance metrics. The framework addresses key challenges in process discovery, including the following:",
+                    "This tool is based on a novel framework introduced in a recent study that focuses on improving process discovery by leveraging rules alongside event logs. These rules, which define relationships between activities, can be discovered automatically or provided by domain experts, and IMr uses them to guide the process discovery workflow.",
                     className="content",
                 ),
                 html.Ul(
                     children=[
-                        html.Li("Detecting behavioral shifts using sliding window analysis with Earth Mover's Distance."),
-                        html.Li("Encoding event logs into a feature space defined by declarative constraints for enhanced interpretability."),
-                        html.Li("Clustering features to identify and explain distinct behavioral patterns."),
+                        html.Li("Integrates discovered or user-defined rules into the process discovery workflow."),
+                        html.Li(
+                            "Employs a divide-and-conquer strategy, using rules to guide the selection of process structures."),
+                        html.Li(
+                            "Discovers high-quality imperative process models, such as BPMN models and Petri nets."),
                     ],
                     className="feature-list",
                 ),
                 html.P(
-                    "The framework was validated using real-life event logs from the UWV employee insurance agency in the Netherlands, demonstrating its ability to uncover meaningful changes, explain process variability, and support data-driven decisions.",
+                    "The IMr framework has been evaluated on several real-world event logs, demonstrating that the discovered models better align with the provided rules without compromising their conformance to the event log.",
                     className="content",
                 ),
                 html.P(
-                    "X-PVI is implemented as an open-source tool to enable broader applicability in real-world scenarios.",
+                    "Furthermore, the evaluation shows that high-quality rules can improve model quality across well-known conformance metrics, highlighting the importance of integrating domain knowledge into process discovery.",
+                    className="content",
+                ),
+                html.P(
+                    "IMr is implemented as an open-source tool to enable broader applicability in real-world scenarios.",
                     className="content",
                 ),
             ],
@@ -74,19 +80,14 @@ layout = dbc.Container(
             children=[
                 html.H2("Try the Tool with an Example", className="section-title"),
                 html.P(
-                    "Download a sample event log generated from a BPMN model to test the tool's features.",
+                    "Download the BPI challenge 2012 event log using the link below and try the tool.",
                     className="content",
                 ),
                 html.A(
                     "Download Sample File",
-                    href="/assets/test.xes",
-                    download="test.xes",
+                    href="/assets/BPI_Challenge_2012_AO.xes",
+                    download="BPI_Challenge_2012_AO.xes",
                     className="download-link",
-                ),
-                html.Img(
-                    src="/assets/bpmn_test.png",
-                    alt="BPMN Model",
-                    className="example-image",
                 ),
             ],
         ),
