@@ -1,5 +1,5 @@
 
-# **Process Variant Identification (X-PVI)**
+# **Rule-guided Process Discovery (IMr)**
 A cutting-edge tool for process analysis and variant detection, designed to help uncover control-flow variability, inefficiencies, and undesired behaviors in processes.
 
 ---
