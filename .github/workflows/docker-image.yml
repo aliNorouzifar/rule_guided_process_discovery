@@ -22,8 +22,8 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: aliNorouzifar
-          password: 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
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Step 3: Build and Push Docker Image
       - name: Build and Push Docker image
@@ -33,5 +33,4 @@ jobs:
           push: true
           tags: ghcr.io/alinorouzifar/imr:latest
           labels: |
-            org.opencontainers.image.source=https://github.com/aliNorouzifar
-            
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
