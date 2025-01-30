@@ -58,6 +58,8 @@ def register_callbacks(app):
             input_log_path = os.path.join(UPLOAD_FOLDER, input_file)
             files = os.listdir(input_log_path) if os.path.exists(input_log_path) else []
             file = Path(UPLOAD_FOLDER) / f"{input_file}" / files[0]
+            if not os.path.exists(r"event_logs\rules"):
+                os.makedirs(r"event_logs\rules")
             output_log_path = os.path.join(r"event_logs\rules", "rules.json")
             discover_declare(file, output_log_path, support, confidence)
             return IMr_params_show()
