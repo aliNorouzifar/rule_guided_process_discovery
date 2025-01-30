@@ -2,11 +2,11 @@ from dash import Input, Output, State, html
 from pages.main_page import rule_src_selection,show_rule_uploder,show_Minerful_params, IMr_params_show, rule_related_statistics_show,conformance_related_statistics_show,show_petri_net
 import os
 import shutil
-from functions.declare.minerful_calls import discover_declare
+from prolysis.calls.minerful_calls import discover_declare
 from pathlib import Path
-from functions.discovery import run_IMr
+from prolysis.discovery.discovery import run_IMr
 import json
-from functions.functions.evaluation import conformance_checking,extract_significant_dev
+from prolysis.analysis.evaluation import conformance_checking,extract_significant_dev
 
 
 UPLOAD_FOLDER = "event_logs"
