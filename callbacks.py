@@ -84,10 +84,10 @@ def register_callbacks(app):
             log_path = Path(UPLOAD_FOLDER) / f"{log_file}" / files[0]
 
             rule_file = r"rules"
-            input_rule_path = os.path.join(UPLOAD_FOLDER, rule_file)
+            input_rule_path = os.path.join(UPLOAD_FOLDER, "rules")
             files = os.listdir(input_rule_path) if os.path.exists(input_rule_path) else []
-            rule_path = Path(UPLOAD_FOLDER) / f"{rule_file}" / files[0]
-            # rule_path = os.path.join(OUTPUT_FOLDER, "rules.json")
+            # rule_path = Path(UPLOAD_FOLDER) / f"{rule_file}" / files[0]
+            rule_path = os.path.join(UPLOAD_FOLDER,"rules", files[0])
             gviz = run_IMr(log_path,rule_path,sup)
             return show_petri_net(gviz)
         return "", ""
