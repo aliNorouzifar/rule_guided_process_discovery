@@ -7,7 +7,7 @@ ENV JAVA_HOME=/usr/lib/jvm/jdk-21
 ENV PATH="$JAVA_HOME/bin:$PATH"
 
 # Install necessary tools
-RUN apt-get update && apt-get install -y wget && \
+RUN apt-get update && apt-get install -y wget redis && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Download and install JDK 21 using the .deb package
@@ -22,9 +22,9 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8002
+EXPOSE 8002 6379
 
-CMD ["python", "app.py"]
+CMD ["bash", "-c", "service redis-server start && python app.py"]
 
 LABEL org.opencontainers.image.source="https://github.com/aliNorouzifar/rule_guided_process_discovery"
 

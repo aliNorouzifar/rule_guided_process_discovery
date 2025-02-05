@@ -4,6 +4,7 @@ import dash_uploader as du
 import json
 import pandas as pd
 import dash_interactive_graphviz
+from prolysis.util.redis_connection import redis_client
 
 
 def load_variables():
@@ -106,7 +107,7 @@ def create_right_panel():
             html.Div(
                 className="visualization-wrapper",
                 children=[
-                    html.Div(id="output-data-upload3", className="visualization-block"),
+                    html.Div(id="petri_net1", className="visualization-block"),
                     html.Hr(),
                     html.Div(id="output-data-upload5", className="visualization-block"),
                     html.Hr(),
@@ -132,11 +133,13 @@ def rule_src_selection():
         dcc.RadioItems(
             id='rule_src',
             options=[
-                {'label': 'Discover with Minerful!', 'value': 'Minerful'},
-                {'label': 'Import from local drive!', 'value': 'manual'},
+                {'label': 'Minerful!', 'value': 'Minerful'},
+                {'label': 'Local drive!', 'value': 'manual'},
+                {'label': 'no rules!', 'value': 'no_rule'},
             ],
             value=["manual"],  # Default selected values
-            inline=True  # Display options inline
+            labelStyle={'display': 'flex', 'alignItems': 'center', 'white-space': 'nowrap'},
+            style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'flex-start'}
         )
     ])
 
@@ -221,6 +224,21 @@ def IMr_params_show():
                         children=html.H4("IMr Parameters", className="section-title"),
                     ),
                     html.Hr(),
+                    html.H4("penalty dimension:", className="parameter-name"),
+                    dcc.Dropdown(id='dimension', options=[{'label': x, 'value': x} for x in json.loads(redis_client.get('dimensions'))], value='support'),
+                    html.Hr(),
+                    html.H4("absence threshold:", className="parameter-name"),
+                    html.Div([
+                        dcc.Input(
+                            id='absence_thr',
+                            type="number",
+                            min=-1,
+                            max=1,
+                            value=0.0,
+                            step=0.05
+                        ),
+                    ]),
+                    html.Hr(),
                     html.H4("IMr sup:", className="parameter-name"),
                     html.Div([
                         dcc.Input(
@@ -240,6 +258,53 @@ def IMr_params_show():
         ],
             className="flex-column align-center")
     ])
+
+def IMr_no_rules_params_show():
+    return html.Div([
+            html.Div([
+                html.Div(
+                    className="parameter-container",
+                    children=[
+                        html.Div(
+                            className="section-header",
+                            children=html.H4("IMr Parameters", className="section-title"),
+                        ),
+                        # html.Hr(),
+                        html.H4("penalty dimension:", className="parameter-name", style={'display': 'none'}),
+                        dcc.Dropdown(id='dimension', options=[{'label': x, 'value': x} for x in
+                                                              json.loads(redis_client.get('dimensions'))],
+                                     value='support', style={'display': 'none'}),
+                        # html.Hr(),
+                        html.H4("absence threshold:", className="parameter-name", style={'display': 'none'}),
+                        html.Div([
+                            dcc.Input(
+                                id='absence_thr',
+                                type="number",
+                                min=-1,
+                                max=1,
+                                value=0.0,
+                                step=0.05
+                            , style={'display': 'none'}),
+                        ]),
+                        html.H4("IMr sup:", className="parameter-name"),
+                        html.Div([
+                            dcc.Input(
+                                id='sup_IMr_val',
+                                type="number",
+                                min=0,
+                                max=1,
+                                value=0.2,
+                                step= 0.1
+                            ),
+                        ]),
+                        html.Hr(),
+                        html.Button(id="run_IMr_selector", children="Run IMr", className="btn-primary", n_clicks=0),
+                        # html.Hr(),
+                    ]
+                )
+            ],
+                className="flex-column align-center")
+        ])
 
 def rule_related_statistics_show(N_rules, N_dev, support_cost,confidence_cost, dev_list):
     statistics=[

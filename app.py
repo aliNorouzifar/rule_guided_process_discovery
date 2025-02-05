@@ -6,6 +6,8 @@ import pages.start_page as start_page
 import pages.about_me as about_me
 import pages.main_page as main_page
 import os
+from prolysis.util import redis_connection
+
 
 UPLOAD_FOLDER = "event_logs"
 # List of directories to check/create
@@ -26,6 +28,9 @@ app.config.suppress_callback_exceptions = True
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
+    dcc.Store(id="show_IMr_run1",data=False),
+    dcc.Store(id="show_IMr_run2",data=False),
+    dcc.Store(id="show_IMr_run3",data=False),
     html.Div(id='page-content'),
 ])
 
