@@ -171,3 +171,32 @@ def register_callbacks(app):
             fitness, precision = conformance_checking(log_path, model_path)
             return conformance_related_statistics_show(fitness, precision)
         return ""
+
+    @app.callback(
+        Output("log-display", "children"),
+        Input("latest_log", "n_clicks"),
+    )
+    def update_logs(n):
+        if n>0:
+            # Read the log file and return its contents
+            log_file = "log.log"
+            if os.path.exists(log_file):
+                with open(log_file, "r") as f:
+                    logs = f.read()
+            else:
+                logs = "No logs yet."
+            return logs
+
+
+    @app.callback(
+        Input('remove_inputs', "n_clicks"),
+        prevent_initial_call=True
+    )
+    def remove_inputs(n):
+        if n>0:
+            if not os.path.exists(r"event_logs"):
+                os.makedirs(r"event_logs")
+            else:
+                clear_upload_folder(r"event_logs")
+
+

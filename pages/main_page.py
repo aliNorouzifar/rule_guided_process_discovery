@@ -82,13 +82,19 @@ def create_left_panel():
                 children=[
                     html.Hr(),
 
-                    html.Div(id="output-data-upload2", className="parameter-block card"),
+                    html.Div(id="output-data-upload2"),
                     # html.Hr(),
-                    html.Div(id="output-data-upload4", className="parameter-block card"),
+                    html.Div(id="output-data-upload4"),
                     # html.Hr(),
-                    html.Div(id="output-data-upload6", className="parameter-block card"),
-                    html.Div(id="output-data-upload8", className="parameter-block card"),
-                    html.Div(id="output-data-upload10", className="parameter-block card"),
+                    html.Div(id="output-data-upload6"),
+                    html.Div(id="output-data-upload8"),
+                    html.Div(id="output-data-upload10"),
+                    html.Button(id="latest_log", children="Show the Latest Execution Log", n_clicks=0,
+                                style={"background-color": "red", "color": "white", "border": "none",
+                                       "padding": "10px 20px", "border-radius": "5px"}),
+                    html.Button(id="remove_inputs", children="Remove the Event Log", n_clicks=0,
+                                style={"background-color": "red", "color": "white", "border": "none",
+                                       "padding": "10px 20px", "border-radius": "5px"}),
                 ],
             ),
         ],
@@ -107,11 +113,13 @@ def create_right_panel():
             html.Div(
                 className="visualization-wrapper",
                 children=[
-                    html.Div(id="petri_net1", className="visualization-block"),
-                    html.Hr(),
-                    html.Div(id="output-data-upload5", className="visualization-block"),
-                    html.Hr(),
-                    html.Div(id="output-data-upload7", className="visualization-block"),
+                    html.Div(id="petri_net1"),
+                    html.Div(id="output-data-upload5"),
+                    html.Div(id="output-data-upload7"),
+                    html.Div([
+                        html.Pre(id="log-display",
+                                 style={"whiteSpace": "pre-wrap", "height": "400px", "overflowY": "scroll"})
+                    ]),
                 ],
             ),
         ],
@@ -128,8 +136,8 @@ def get_upload_component(id):
     )
 
 def rule_src_selection():
-    return html.Div([
-        html.H4("What is the rule source?:",className="parameter-name"),
+    return html.Div(className="parameter-container",children=[
+        html.H4("What is the rule source?",className="parameter-name"),
         dcc.RadioItems(
             id='rule_src',
             options=[

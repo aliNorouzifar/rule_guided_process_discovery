@@ -3,4 +3,4 @@ dash==2.18.2
 dash_bootstrap_components==1.7.1
 dash_interactive_graphviz==0.3.0
 dash_uploader==0.6.1
-prolysis>=0.1.4
+prolysis>=0.2.1
